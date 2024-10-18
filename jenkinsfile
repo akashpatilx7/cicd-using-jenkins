@@ -1,45 +1,19 @@
 pipeline {
     agent any
-    tools { nodejs "NODEJS" }
+    tools {nodejs "NODEJS"}
     stages {
-        stage('Checkout') {
-            steps {
-                // Use explicit Git checkout command
-                git branch: 'main', url: 'https://github.com/akashpatilx7/cicd-using-jenkins.git'
-            }
-        }
         stage('Build') {
             steps {
                 sh 'npm install'
             }
         }
-        stage('Verify Docker Access') {
+        stage('Deliver') {
             steps {
-                sh 'docker --version'
-            }
-        }
-        stage('Docker Build') {
-            steps {
-                script {
-                    // Build the Docker image
-                    sh 'docker build -t react-app:latest .'
-                }
-            }
-        }
-        stage('Deploy') {
-            steps {
-                script {
-                    // Run the Docker container
-                    sh 'docker run -d -p 3000:3000 react-app:latest'
-                }
-            }
-        }
-    }
-    post {
-        always {
-            script {
-                // Clean up old containers
-                sh 'docker container prune -f'
+                sh 'chmod -R +rwx ./jenkins/scripts/deliver.sh'
+                sh 'chmod -R +rwx ./jenkins/scripts/kill.sh'
+                sh './jenkins/scripts/deliver.sh'
+                input message: 'Finished using the web site? (Click "Proceed" to continue)'
+                sh './jenkins/scripts/kill.sh'
             }
         }
     }
